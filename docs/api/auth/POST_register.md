@@ -1,9 +1,9 @@
-# POST /accounts
+# POST /auth/register
 
 ## Curl
 
 ```bash
-curl -X POST http://localhost:8080/accounts \
+curl -X POST http://localhost:8081/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "first_name": "John",
@@ -28,12 +28,8 @@ curl -X POST http://localhost:8080/accounts \
 
 ```json
 {
-  "id": "uuid",
   "user_id": "uuid",
-  "available_balance": 100000,
-  "hold_balance": 0,
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
+  "message": "registration successful"
 }
 ```
 
@@ -51,6 +47,6 @@ curl -X POST http://localhost:8080/accounts \
 3. Hash the password (bcrypt/argon2)
 4. Encrypt `first_name` and `last_name` with AES-256
 5. Insert a new row in the `users` table
-6. Insert a new row in the `accounts` table with the new `user_id` and default balance of 100,000
-7. Commit transaction — if any step fails, rollback everything
-8. Return the newly created account
+6. Publish `user.registered` event to Kafka with `user_id` as payload
+7. Commit transaction
+8. Return `user_id` and success message
