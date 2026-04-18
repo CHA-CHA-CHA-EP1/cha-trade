@@ -29,9 +29,11 @@ CREATE TABLE IF NOT EXISTS accounts (
   updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Enforce 1 user = 1 account
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_user_id_unique ON accounts(user_id);
+
 -- Index for faster account lookups
 CREATE INDEX IF NOT EXISTS idx_accounts_id ON accounts(id);
-CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
 
 -- Add constraint: balance should never be negative
 ALTER TABLE accounts
@@ -68,7 +70,7 @@ COMMENT ON COLUMN users.enc_last_name IS 'AES-256 encrypted last name (PII)';
 COMMENT ON COLUMN users.password_hash IS 'Hashed password (bcrypt/argon2)';
 
 COMMENT ON TABLE accounts IS 'User accounts with available and hold balance tracking';
-COMMENT ON COLUMN accounts.user_id IS 'FK to users table - one user can have multiple accounts';
+COMMENT ON COLUMN accounts.user_id IS 'FK to users table - one user has exactly one account';
 COMMENT ON COLUMN accounts.available_balance IS 'Balance available for trading (not held)';
 COMMENT ON COLUMN accounts.hold_balance IS 'Balance held for pending orders';
 
