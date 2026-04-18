@@ -1,5 +1,18 @@
 # POST /accounts
 
+## Curl
+
+```bash
+curl -X POST http://localhost:8080/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "password": "plaintext_password"
+  }'
+```
+
 ## Request Body
 
 ```json

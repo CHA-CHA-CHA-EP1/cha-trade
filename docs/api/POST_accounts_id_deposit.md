@@ -1,5 +1,13 @@
 # POST /accounts/:id/deposit
 
+## Curl
+
+```bash
+curl -X POST http://localhost:8080/accounts/{id}/deposit \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 50000}'
+```
+
 ## Request Body
 
 ```json

@@ -1,5 +1,13 @@
 # POST /internal/accounts/:id/hold
 
+## Curl
+
+```bash
+curl -X POST http://localhost:8080/internal/accounts/{id}/hold \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 30000, "order_id": "uuid"}'
+```
+
 ## Request Body
 
 ```json

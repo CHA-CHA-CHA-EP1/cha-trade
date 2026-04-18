@@ -1,5 +1,11 @@
 # GET /accounts/:id/balance
 
+## Curl
+
+```bash
+curl http://localhost:8080/accounts/{id}/balance
+```
+
 ## Response Body
 
 ```json
