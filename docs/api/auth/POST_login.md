@@ -24,8 +24,10 @@ curl -X POST http://localhost:8081/auth/login \
 
 ```json
 {
-  "token": "jwt_token",
-  "user_id": "uuid"
+  "status": "success",
+  "data": {
+    "access_token": "jwt_token"
+  }
 }
 ```
 
@@ -37,6 +39,8 @@ curl -X POST http://localhost:8081/auth/login \
 
 ### Steps
 1. Find user by `email` in the `users` table → if not found, return 401
-2. Verify password against `password_hash` → if invalid, return 401
-3. Generate JWT token with `user_id` as payload
-4. Return token with `user_id`
+2. Verify password against `password_hash` using argon2id → if invalid, return 401
+3. Generate JWT token with `user_id` as subject (`sub`)
+   - Expiry: 24 hours from now
+   - Secret: `JWT_SECRET` from env
+4. Return `access_token`

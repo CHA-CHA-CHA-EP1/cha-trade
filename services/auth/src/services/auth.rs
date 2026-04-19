@@ -2,18 +2,29 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
+use chrono::{Utc, Duration};
+use jsonwebtoken::{encode, Header, EncodingKey};
+use serde::{Serialize, Deserialize};
 
 use crate::domains::models::auth::CreateUser;
 use crate::domains::repositories::auth::UserRepository;
 use crate::domains::services::auth::AuthService;
-use crate::handler::register_handler::RegisterRequest;
+use crate::handler::{login_handler::LoginRequest, register_handler::RegisterRequest};
 use crypto::{FieldEncryptor, FieldHmac, PasswordHasher};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String,
+    exp: i64,
+    iat: i64,
+}
 
 pub struct AuthServiceImpl<R: UserRepository> {
     user_repo:       Arc<R>,
     encryptor:       Arc<dyn FieldEncryptor>,
     password_hasher: Arc<dyn PasswordHasher>,
     hmac:            Arc<dyn FieldHmac>,
+    jwt_secret:      String,
 }
 
 impl<R: UserRepository> AuthServiceImpl<R> {
@@ -22,8 +33,28 @@ impl<R: UserRepository> AuthServiceImpl<R> {
         encryptor:       Arc<dyn FieldEncryptor>,
         password_hasher: Arc<dyn PasswordHasher>,
         hmac:            Arc<dyn FieldHmac>,
+        jwt_secret:      String,
     ) -> Self {
-        Self { user_repo, encryptor, password_hasher, hmac }
+        Self { user_repo, encryptor, password_hasher, hmac, jwt_secret }
+    }
+
+    fn generate_token(&self, user_id: &str) -> Result<String> {
+        let now = Utc::now();
+        let exp = now + Duration::hours(24);
+
+        let claims = Claims {
+            sub: user_id.to_string(),
+            exp: exp.timestamp(),
+            iat: now.timestamp(),
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(self.jwt_secret.as_ref()),
+        )?;
+
+        Ok(token)
     }
 }
 
@@ -55,5 +86,21 @@ impl<R: UserRepository> AuthService for AuthServiceImpl<R> {
         }).await?;
 
         Ok(user.id.to_string())
+    }
+
+    async fn login(&self, req: LoginRequest) -> Result<String> {
+        // 1. find user by email
+        let user = self.user_repo.find_by_email(&req.email).await?
+            .ok_or_else(|| anyhow!("invalid email or password"))?;
+
+        // 2. verify password
+        if !self.password_hasher.verify(&req.password, &user.password_hash)? {
+            return Err(anyhow!("invalid email or password"));
+        }
+
+        // 3. generate JWT token
+        let token = self.generate_token(&user.id.to_string())?;
+
+        Ok(token)
     }
 }

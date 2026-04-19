@@ -28,8 +28,10 @@ curl -X POST http://localhost:8081/auth/register \
 
 ```json
 {
-  "user_id": "uuid",
-  "message": "registration successful"
+  "status": "success",
+  "data": {
+    "user_id": "uuid"
+  }
 }
 ```
 
@@ -45,27 +47,23 @@ curl -X POST http://localhost:8081/auth/register \
 ### Steps
 
 1. Check that `email` is not already registered in the `users` table → if exists, return 409
-2. Begin database transaction
-3. Hash password with argon2id
-4. Lowercase `first_name` and `last_name`
-5. Encrypt `first_name` and `last_name` with AES-GCM-256
+2. Hash password with argon2id
+3. Encrypt `first_name` and `last_name` with AES-GCM-256
    - format: `hex(nonce[12] || ciphertext || tag[16])`
    - key: `AES_KEY` from env
-6. Generate HMAC for `first_name` and `last_name`
-   - `hmac_sha256(HMAC_KEY, lowercase(first_name))`
-   - `hmac_sha256(HMAC_KEY, lowercase(last_name))`
-   - key: `HMAC_KEY` from env (must be different from `AES_KEY`)
-7. Insert a new row in the `users` table with encrypted values and HMAC values
-8. Publish `user.registered` event to Kafka with `user_id` as payload
-9. Commit transaction
-10. Return `user_id` and success message
+4. Generate HMAC for `first_name` and `last_name`
+   - `hmac_sha256(HMAC_KEY, first_name)`
+   - `hmac_sha256(HMAC_KEY, last_name)`
+   - key: `HMAC_KEY` from env
+5. Insert a new row in the `users` table with encrypted values and HMAC values
+6. Return `user_id`
 
 ### Data stored in DB
 
 | Field | Value |
 |-------|-------|
 | `first_name` | `hex(nonce || ciphertext || tag)` |
-| `first_name_hmac` | `hmac_sha256(HMAC_KEY, "john")` |
+| `first_name_hmac` | `hmac_sha256(HMAC_KEY, "John")` |
 | `last_name` | `hex(nonce || ciphertext || tag)` |
-| `last_name_hmac` | `hmac_sha256(HMAC_KEY, "doe")` |
+| `last_name_hmac` | `hmac_sha256(HMAC_KEY, "Doe")` |
 | `password_hash` | argon2id hash |
