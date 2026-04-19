@@ -1,9 +1,16 @@
 [workspace]
 resolver = "3"
-members = ["libs/crypto","services/account", "services/auth", "services/order"]
+members = [
+  "libs/crypto",
+  "libs/http",
+  "services/account",
+  "services/auth",
+  "services/order",
+]
 
 [workspace.dependencies]
 crypto = { path = "libs/crypto" }
+http = { path = "libs/http" }
 actix-web = "4.13.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -12,3 +19,11 @@ anyhow = "1.0.102"
 chrono = { version = "0.4.44", features = ["serde"] }
 validator = { version = "0.20.0", features = ["derive"] }
 regex = "1.12.3"
+sqlx = { version = "0.8.6", features = [
+  "postgres",
+  "runtime-tokio-native-tls",
+  "chrono",
+  "uuid",
+  "bigdecimal",
+] }
+uuid = { version = "1.23.0", features = ["v4", "serde"] }
