@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -10,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cha_trade_password}
       POSTGRES_DB: ${POSTGRES_DB:-cha_trade}
     ports:
-      - "5432:5432"
+      - "5456:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db-migrations:/docker-entrypoint-initdb.d:ro
@@ -57,11 +55,11 @@ services:
       KAFKA_CLUSTERS_0_NAME: cha-trade
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - cha-trade-network
 
-  # Optional: Adminer for database management
   adminer:
     image: adminer:latest
     container_name: cha-trade-adminer
@@ -71,7 +69,8 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - cha-trade-network
 

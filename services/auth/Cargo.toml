@@ -14,3 +14,6 @@ anyhow = { workspace = true }
 chrono = { workspace = true }
 validator = { workspace = true }
 regex = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+hex = "0.4"

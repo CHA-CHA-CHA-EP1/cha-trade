@@ -5,13 +5,15 @@
 -- USERS TABLE - Auth and Profile
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  enc_first_name  TEXT NOT NULL,        -- AES-256 encrypted (PII)
-  enc_last_name   TEXT NOT NULL,        -- AES-256 encrypted (PII)
-  email           VARCHAR(255) NOT NULL UNIQUE,
-  password_hash   VARCHAR(255) NOT NULL,
-  created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  first_name       TEXT NOT NULL,        -- AES-GCM-256 encrypted (PII)
+  first_name_hmac  TEXT NOT NULL,        -- HMAC-SHA256 for search
+  last_name        TEXT NOT NULL,        -- AES-GCM-256 encrypted (PII)
+  last_name_hmac   TEXT NOT NULL,        -- HMAC-SHA256 for search
+  email            VARCHAR(255) NOT NULL UNIQUE,
+  password_hash    TEXT NOT NULL,        -- argon2id hash
+  created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Index for faster email lookups (login)
@@ -65,9 +67,11 @@ CREATE TRIGGER trigger_accounts_updated_at
 
 -- Comments
 COMMENT ON TABLE users IS 'User authentication and profile information';
-COMMENT ON COLUMN users.enc_first_name IS 'AES-256 encrypted first name (PII)';
-COMMENT ON COLUMN users.enc_last_name IS 'AES-256 encrypted last name (PII)';
-COMMENT ON COLUMN users.password_hash IS 'Hashed password (bcrypt/argon2)';
+COMMENT ON COLUMN users.first_name IS 'AES-GCM-256 encrypted first name (PII)';
+COMMENT ON COLUMN users.first_name_hmac IS 'HMAC-SHA256 of lowercase first name for search';
+COMMENT ON COLUMN users.last_name IS 'AES-GCM-256 encrypted last name (PII)';
+COMMENT ON COLUMN users.last_name_hmac IS 'HMAC-SHA256 of lowercase last name for search';
+COMMENT ON COLUMN users.password_hash IS 'argon2id hashed password';
 
 COMMENT ON TABLE accounts IS 'User accounts with available and hold balance tracking';
 COMMENT ON COLUMN accounts.user_id IS 'FK to users table - one user has exactly one account';
