@@ -36,12 +36,14 @@ curl -X POST http://localhost:8081/auth/register \
 ## Business Logic
 
 ### Validate Request Body
+
 1. `first_name` must not be empty
 2. `last_name` must not be empty
 3. `email` must not be empty and must be a valid email format
 4. `password` must not be empty and must be at least 8 characters
 
 ### Steps
+
 1. Check that `email` is not already registered in the `users` table → if exists, return 409
 2. Begin database transaction
 3. Hash the password (bcrypt/argon2)
