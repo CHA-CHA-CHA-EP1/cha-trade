@@ -1,0 +1,69 @@
+qq!:q=q# POST /auth/register
+
+## Curl
+
+```bash
+curl -X POST http://localhost:8081/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "password": "plaintext_password"
+  }'
+```
+
+## Request Body
+
+```json
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john@example.com",
+  "password": "plaintext_password"
+}
+```
+
+## Response Body
+
+```json
+{
+  "status": "success",
+  "data": {
+    "user_id": "uuid"
+  }
+}
+```
+
+## Business Logic
+
+### Validate Request Body
+
+1. `first_name` must not be empty
+2. `last_name` must not be empty
+3. `email` must not be empty and must be a valid email format
+4. `password` must not be empty and must be at least 8 characters
+
+### Steps
+
+1. Check that `email` is not already registered in the `users` table → if exists, return 409
+2. Hash password with argon2id
+3. Encrypt `first_name` and `last_name` with AES-GCM-256
+   - format: `hex(nonce[12] || ciphertext || tag[16])`
+   - key: `AES_KEY` from env
+4. Generate HMAC for `first_name` and `last_name`
+   - `hmac_sha256(HMAC_KEY, first_name)`
+   - `hmac_sha256(HMAC_KEY, last_name)`
+   - key: `HMAC_KEY` from env
+5. Insert a new row in the `users` table with encrypted values and HMAC values
+6. Return `user_id`
+
+### Data stored in DB
+
+| Field | Value |
+|-------|-------|
+| `first_name` | `hex(nonce || ciphertext || tag)` |
+| `first_name_hmac` | `hmac_sha256(HMAC_KEY, "John")` |
+| `last_name` | `hex(nonce || ciphertext || tag)` |
+| `last_name_hmac` | `hmac_sha256(HMAC_KEY, "Doe")` |
+| `password_hash` | argon2id hash |
