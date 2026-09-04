@@ -4,12 +4,14 @@
 
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
-if echo "$BRANCH" | grep -qE "^release/"; then
+PROTECTED_BRANCHES="^(main|master|develop|release/.*)$"
+
+if echo "$BRANCH" | grep -qE "$PROTECTED_BRANCHES"; then
   echo ""
   echo "❌ Direct commits to '$BRANCH' are not allowed."
   echo ""
-  echo "   Release branches are protected."
-  echo "   Please merge your changes via Pull Request only."
+  echo "   Protected branches: main, master, develop, release/*"
+  echo "   Please commit on a feature/hotfix/bugfix branch and merge via Pull Request."
   echo ""
   exit 1
 fi
